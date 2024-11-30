@@ -10,7 +10,7 @@ import Doctors from "./components/Doctors";
 import About from "./components/About";
 import Footer from "./components/Footer";
 import LoginModal from "./components/LoginModal";
-import ResultsModal from "./components/ResultsModal";
+import Results from "./components/Results"; // Import the Results page
 import SignUp from "./components/SignUp";
 
 const App = () => {
@@ -24,7 +24,6 @@ const App = () => {
 
   // State for managing modals
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showResultsModal, setShowResultsModal] = useState(false);
 
   // Function to scroll to the Services section
   const scrollToServices = () => {
@@ -33,26 +32,44 @@ const App = () => {
     }
   };
 
+  // Layout with Navbar and Footer
+  const LayoutWithNavbar = ({ children }) => (
+    <>
+      <Navbar onLoginClick={() => setShowLoginModal(true)} />
+      {children}
+      <Footer />
+      <LoginModal show={showLoginModal} closeModal={() => setShowLoginModal(false)} />
+    </>
+  );
+
   return (
     <Router>
       <Routes>
+        {/* Main Landing Page */}
         <Route
           path="/"
           element={
-            <>
-              <Navbar onLoginClick={() => setShowLoginModal(true)} />
+            <LayoutWithNavbar>
               <HeroSection scrollToServices={scrollToServices} />
               <Features />
               <Services ref={servicesRef} />
               <Doctors />
               <About />
-              <Footer />
-              <LoginModal show={showLoginModal} closeModal={() => setShowLoginModal(false)} />
-              <ResultsModal show={showResultsModal} onClose={() => setShowResultsModal(false)} />
-            </>
+            </LayoutWithNavbar>
           }
         />
 
+        {/* Results Page with Navbar */}
+        <Route
+          path="/results"
+          element={
+            <LayoutWithNavbar>
+              <Results />
+            </LayoutWithNavbar>
+          }
+        />
+
+        {/* Signup Page without Navbar */}
         <Route path="/signup" element={<SignUp />} />
       </Routes>
     </Router>
