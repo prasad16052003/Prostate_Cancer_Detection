@@ -34,7 +34,7 @@ const SignUp = () => {
   // Save user data in Firestore
   const saveUserDataInFirestore = async (uid, name, email, userType) => {
     try {
-      await setDoc(doc(db, "users", uid), {
+      await setDoc(doc(db, "users-procare", uid), {
         name,
         email,
         userType,

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { auth } from "../config/firebaseConfig";
 import { Button, Container, Typography, Box, Snackbar, CircularProgress } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import MuiAlert from "@mui/material/Alert";
+import { analyzeImage } from "../api/predict";
 
 const Services = React.forwardRef((props, ref) => {
   const [image, setImage] = useState(null);
@@ -11,10 +13,15 @@ const Services = React.forwardRef((props, ref) => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const navigate = useNavigate(); // Hook for navigation
+
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
-    if (file) {
+    if (file && file.type.match("image/jpeg")) {
       setImage(file);
+    } else {
+      setSnackbarMessage("Only JPG/JPEG images are allowed.");
+      setOpenSnackbar(true);
     }
   };
 
@@ -25,20 +32,28 @@ const Services = React.forwardRef((props, ref) => {
     return () => unsubscribe();
   }, []);
 
-  const handleAnalyzeClick = () => {
-    if (image) {
-      setLoading(true); // Show loading indicator
+  const handleAnalyzeClick = async () => {
+    if (image && user) {
+      setLoading(true);
       setSnackbarMessage("Analyzing image...");
       setOpenSnackbar(true);
 
-      // Simulating an image analysis (you can replace this with actual logic)
-      setTimeout(() => {
-        setLoading(false); // Hide loading indicator
+      const result = await analyzeImage(image, user);
+
+      setLoading(false);
+
+      if (result.success) {
         setSnackbarMessage("Image analyzed successfully!");
         setOpenSnackbar(true);
-      }, 2000); // Simulate a delay of 2 seconds for analysis
+
+        // Navigate to the results page with result data
+        navigate("/results", { state: { resultUrls: result.data } });
+      } else {
+        setSnackbarMessage(result.message);
+        setOpenSnackbar(true);
+      }
     } else {
-      setSnackbarMessage("Please upload an image first.");
+      setSnackbarMessage("Please upload an image and login first.");
       setOpenSnackbar(true);
     }
   };
@@ -71,7 +86,7 @@ const Services = React.forwardRef((props, ref) => {
               type="file"
               id="imageUpload"
               className="hidden"
-              accept="image/*"
+              accept="image/jpeg"
               onChange={handleImageUpload}
             />
             <label htmlFor="imageUpload" className="cursor-pointer block">
@@ -101,18 +116,18 @@ const Services = React.forwardRef((props, ref) => {
             <Button
               variant="contained"
               sx={{
-                backgroundColor: loading ? "green.500" : "#16a34a", // Ensure green.600 is applied (hex equivalent of green.600)
+                backgroundColor: loading ? "green.500" : "#16a34a",
                 color: "white",
                 py: 2,
                 fontSize: "1rem",
                 textTransform: "none",
                 width: "100%",
                 "&:hover": {
-                  backgroundColor: loading ? "green.600" : "#15803d", // Darker green on hover
+                  backgroundColor: loading ? "green.600" : "#15803d",
                 },
               }}
               onClick={handleAnalyzeClick}
-              disabled={user == null || loading} // Disable while loading or if not logged in
+              disabled={user == null || loading}
             >
               {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : "Analyze Image"}
             </Button>
@@ -120,14 +135,13 @@ const Services = React.forwardRef((props, ref) => {
         </Box>
       </Container>
 
-      {/* Snackbar for notifications */}
       <Snackbar
         open={openSnackbar}
         autoHideDuration={3000}
         onClose={() => setOpenSnackbar(false)}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <MuiAlert onClose={() => setOpenSnackbar(false)} severity={image && !loading ? "success" : "info"}>
+        <MuiAlert onClose={() => setOpenSnackbar(false)} severity={loading ? "info" : "error"}>
           {snackbarMessage}
         </MuiAlert>
       </Snackbar>
