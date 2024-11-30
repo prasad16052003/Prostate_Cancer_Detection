@@ -8,7 +8,7 @@ export const analyzeImage = async (image, user) => {
 	  formData.append("firebase_token", token); // Send the Firebase token as required by the backend
 	  formData.append("image", image); // Attach the uploaded image
   
-	  const backendUrl = process.env.BACKEND_URL || "http://localhost:8000";
+	  const backendUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
   
 	  // Call the backend API
 	  const response = await fetch(`${backendUrl}/predict`, {
