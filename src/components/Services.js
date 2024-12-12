@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { auth } from "../config/firebaseConfig";
-import { Button, Container, Typography, Box, Snackbar, CircularProgress } from "@mui/material";
+import { auth, db } from "../config/firebaseConfig"; // Firebase import for Firestore
+import { Button, Container, Typography, Box, Snackbar, CircularProgress, TextField } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import MuiAlert from "@mui/material/Alert";
 import { analyzeImage } from "../api/predict";
+import { getDoc, doc } from "firebase/firestore"; // Firestore methods
 
 const Services = React.forwardRef((props, ref) => {
   const [image, setImage] = useState(null);
   const [user, setUser] = useState(null);
+  const [userType, setUserType] = useState("N/A");
+  const [patientName, setPatientName] = useState(""); // New state for patient's name
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,19 +29,28 @@ const Services = React.forwardRef((props, ref) => {
   };
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-      setUser(currentUser);
+    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        const userRef = doc(db, "users-procare", currentUser.uid);
+        const userDoc = await getDoc(userRef);
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setUserType(userData.userType);
+        }
+      }
     });
     return () => unsubscribe();
   }, []);
 
   const handleAnalyzeClick = async () => {
-    if (image && user) {
+    if (image && user && patientName) {
       setLoading(true);
       setSnackbarMessage("Analyzing image...");
       setOpenSnackbar(true);
 
-      const result = await analyzeImage(image, user);
+      const result = await analyzeImage(image, user, patientName);
 
       setLoading(false);
 
@@ -106,6 +118,20 @@ const Services = React.forwardRef((props, ref) => {
             </Typography>
           )}
 
+          {
+            userType === "doctor" && (
+              <TextField
+                label="Patient Name"
+                variant="outlined"
+                value={patientName}
+                onChange={(e) => setPatientName(e.target.value)}
+                placeholder="Enter patient name"
+                size="small"
+                sx={{ mb: 2, width: { xs: "100%", sm: "75%", md: "50%" } }}
+              />
+            )
+          }
+
           {!user && (
             <Typography variant="body2" color="textSecondary" mt={2}>
               Please login to analyze the image.
@@ -127,7 +153,7 @@ const Services = React.forwardRef((props, ref) => {
                 },
               }}
               onClick={handleAnalyzeClick}
-              disabled={user == null || loading}
+              disabled={user == null || loading || !patientName}
             >
               {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : "Analyze Image"}
             </Button>
