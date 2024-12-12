@@ -12,6 +12,7 @@ import Footer from "./components/Footer";
 import LoginModal from "./components/LoginModal";
 import Results from "./components/Results"; // Import the Results page
 import SignUp from "./components/SignUp";
+import Profile from "./components/Profile";
 
 const App = () => {
   // Initialize AOS
@@ -65,6 +66,16 @@ const App = () => {
           element={
             <LayoutWithNavbar>
               <Results />
+            </LayoutWithNavbar>
+          }
+        />
+
+        {/* profile page */}
+        <Route
+          path="/profile"
+          element={
+            <LayoutWithNavbar>
+              <Profile />
             </LayoutWithNavbar>
           }
         />
