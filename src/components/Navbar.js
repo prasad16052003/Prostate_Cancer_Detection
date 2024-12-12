@@ -24,11 +24,11 @@ const Navbar = ({ onLoginClick }) => {
   };
 
   const navLinks = [
-    { name: "Home", href: "#home" },
-    { name: "Features", href: "#features" },
-    { name: "Services", href: "#services" },
-    { name: "Collaboration", href: "#collaboration" },
-    { name: "About", href: "#about" },
+    { name: "Home", href: "/" },
+    { name: "Features", href: "/#features" },
+    { name: "Services", href: "/#services" },
+    { name: "Collaboration", href: "/#collaboration" },
+    { name: "About", href: "/#about" },
   ];
 
   return (
